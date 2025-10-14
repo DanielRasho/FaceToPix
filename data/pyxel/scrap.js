@@ -7,7 +7,7 @@ import * as cheerio from "cheerio";
 const urlsFile = "./src.json";         // file containing ["url1", "url2", ...]
 const outputDir = "./downloads";        // where images will be saved
 const batchSize = 5;                    // number of images per batch
-const sleepMs = 3000;                  // pause between batches (ms)
+const sleepMs = 1000;                  // pause between batches (ms)
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
