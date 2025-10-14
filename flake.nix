@@ -21,6 +21,11 @@
         with p; [
           (opencv4.override {enableGtk3 = true;})
           numpy
+          pillow
+          matplotlib
+          torchvision
+          torch
+          pylint
         ]);
     in {
       default = pkgs.mkShell {
