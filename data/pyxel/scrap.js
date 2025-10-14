@@ -4,17 +4,17 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 // 🧩 CONFIG
-const urlsFile = "./urls.txt";          // file containing list of URLs (one per line)
+const urlsFile = "./src.json";         // file containing ["url1", "url2", ...]
 const outputDir = "./downloads";        // where images will be saved
-const batchSize = 5;                    // number of images to download before sleeping
-const sleepMs = 10000;                  // how long to sleep between batches (ms)
+const batchSize = 5;                    // number of images per batch
+const sleepMs = 3000;                  // pause between batches (ms)
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
 
-// Utility sleep
+// Sleep helper
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function downloadImage(url, filename) {
@@ -31,14 +31,12 @@ async function processUrl(pageUrl) {
     const { data } = await axios.get(pageUrl);
     const $ = cheerio.load(data);
 
-    // Extract first fullsize image
     const src = $("img.fullsize").first().attr("src");
     if (!src) {
-      console.warn(`⚠️ No fullsize image found at ${pageUrl}`);
+      console.warn(`⚠️ No <img class="fullsize"> found at ${pageUrl}`);
       return;
     }
 
-    // Resolve absolute URL
     const imageUrl = new URL(src, pageUrl).href;
     const filename = path.join(
       outputDir,
@@ -47,30 +45,30 @@ async function processUrl(pageUrl) {
 
     await downloadImage(imageUrl, filename);
   } catch (err) {
-    console.error(`❌ Failed to process ${pageUrl}:`, err.message);
+    console.error(`❌ Failed to process ${pageUrl}: ${err.message}`);
   }
 }
 
 async function main() {
-  // Read URLs from file
-  const urls = fs.readFileSync(urlsFile, "utf-8")
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+  // Read and parse JSON
+  const raw = fs.readFileSync(urlsFile, "utf-8");
+  const urls = JSON.parse(raw);
+  if (!Array.isArray(urls)) {
+    throw new Error("❌ The JSON file must contain an array of URLs.");
+  }
 
   console.log(`📋 Loaded ${urls.length} URLs from ${urlsFile}`);
 
   for (let i = 0; i < urls.length; i++) {
     await processUrl(urls[i]);
 
-    // Pause every batch
     if ((i + 1) % batchSize === 0 && i + 1 < urls.length) {
-      console.log(`😴 Sleeping ${sleepMs / 1000}s after ${i + 1} downloads...`);
+      console.log(`😴 Sleeping for ${sleepMs / 1000}s after ${i + 1} downloads...`);
       await sleep(sleepMs);
     }
   }
 
-  console.log("🎉 All done!");
+  console.log("🎉 All downloads complete!");
 }
 
 main();
