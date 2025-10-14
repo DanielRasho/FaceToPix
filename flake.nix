@@ -17,10 +17,17 @@
   in {
     devShells = forAllSystems (system: let
       pkgs = nixpkgsFor.${system};
+      python = pkgs.python3.withPackages (p:
+        with p; [
+          (opencv4.override {enableGtk3 = true;})
+          numpy
+        ]);
     in {
       default = pkgs.mkShell {
         packages = [
+          python
           pkgs.nodejs
+          pkgs.black
         ];
       };
     });
