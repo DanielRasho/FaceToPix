@@ -32,7 +32,7 @@
         packages = [
           python
           pkgs.nodejs
-          pkgs.black
+          pkgs.ruff
         ];
       };
     });
