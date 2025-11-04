@@ -4,10 +4,10 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 // 🧩 CONFIG
-const urlsFile = "./src.json";         // file containing ["url1", "url2", ...]
-const outputDir = "./downloads";        // where images will be saved
-const batchSize = 5;                    // number of images per batch
-const sleepMs = 1000;                  // pause between batches (ms)
+const urlsFile = "./pixie.json"; // file containing ["url1", "url2", ...]
+const outputDir = "./src2"; // where images will be saved
+const batchSize = 20; // number of images per batch
+const sleepMs = 1000; // pause between batches (ms)
 
 // Ensure output directory exists
 if (!fs.existsSync(outputDir)) {
@@ -28,7 +28,23 @@ async function downloadImage(url, filename) {
 
 async function processUrl(pageUrl) {
   try {
-    const { data } = await axios.get(pageUrl);
+    const { data } = await axios.request({
+      url: "https://pixie.haus/" + pageUrl,
+      headers: {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en-US,en;q=0.5",
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64; rv:142.0) Gecko/20100101 Firefox/142.0",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        Connection: "keep-alive",
+        // 'Cookie': 'your-cookie-here' // if needed
+      },
+    });
     const $ = cheerio.load(data);
 
     const src = $("img.fullsize").first().attr("src");
@@ -63,7 +79,9 @@ async function main() {
     await processUrl(urls[i]);
 
     if ((i + 1) % batchSize === 0 && i + 1 < urls.length) {
-      console.log(`😴 Sleeping for ${sleepMs / 1000}s after ${i + 1} downloads...`);
+      console.log(
+        `😴 Sleeping for ${sleepMs / 1000}s after ${i + 1} downloads...`
+      );
       await sleep(sleepMs);
     }
   }
